@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.chezhibao</groupId>
             <artifactId>config-client</artifactId>
-            <version>2.3.5-SNAPSHOT</version>
+            <version>2.3.7-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>com.chezhibao</groupId>
             <artifactId>bigdata-dbms-interface</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.2.5-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -51,18 +51,6 @@
             </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-            <id>mychebao.public</id>
-            <name>mychebao.public</name>
-            <url>http://172.16.12.178:9011/nexus/content/groups/public</url>
-        </repository>
-        <repository>
-            <id>mychebao.snapshots</id>
-            <name>mychebao.snapshots</name>
-            <url>http://172.16.12.178:9011/nexus/content/groups/public</url>
-        </repository>
-    </repositories>
     <distributionManagement>
         <repository>
             <id>sjb</id>
