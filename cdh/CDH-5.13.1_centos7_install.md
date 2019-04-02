@@ -119,14 +119,14 @@ http://central.maven.org/maven2/mysql/mysql-connector-java/5.1.22/mysql-connecto
 	```
 	如果有问题，则查看/opt/cloudera-manager/cm-5.13.1/log下的对应日志（包括cloudera-manager-server和cloudera-manager-agent）
 ## 五、界面操作
-![avatar](install_picture_1/1.png)
-![avatar](install_picture_1/2.png)
-![avatar](install_picture_1/3.png)
-![avatar](install_picture_1/4.png)
-![avatar](install_picture_1/5.jpg)
-![avatar](install_picture_1/6.jpg)
-![avatar](install_picture_1/7.jpg)
-![avatar](install_picture_1/8.jpg)
-![avatar](install_picture_1/9.jpg)
-![avatar](install_picture_1/10.png)
+![avatar](img/1.png)
+![avatar](img/2.png)
+![avatar](img/3.png)
+![avatar](img/4.png)
+![avatar](img/5.png)
+![avatar](img/6.png)
+![avatar](img/7.png)
+![avatar](img/8.png)
+![avatar](img/9.png)
+![avatar](img/10.png)
 	
