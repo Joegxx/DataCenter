@@ -173,6 +173,6 @@
 	启动 bin/bigdata.sh start
 	
 #### 五、部署bigdata-web前端服务
-参考bigdata-web/README.md
+参考bigdata-web/install.md
 
 
