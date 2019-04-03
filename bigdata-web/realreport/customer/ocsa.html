@@ -1,0 +1,267 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>OCSA基础数据</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="http://statics.mychebao.com/portalv1/css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="http://statics.mychebao.com/portalv1/css/pub.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/themes/icon.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-themes/default/easyui.css"
+          id="themeCssLink"/>
+    <link rel="stylesheet" type="text/css" href="../css/xcConfirm.css" id="xcConfirm"/>
+
+
+    <style type="text/css">
+        body {
+            padding: 0 0 0 20px
+        }
+
+        .head {
+            height: 20px;
+            width: 100%
+        }
+
+        .bd {
+            width: 1130px;
+            height: 550px;
+            margin-top: 10px;
+        }
+
+        .title_date, .title_info {
+            font-family: 微软雅黑
+        }
+
+        .title_date > font, .title_info > font {
+            font-weight: bolder
+        }
+
+        .pnum {
+            text-decoration: underline
+        }
+
+        .headText {
+            font-weight: bolder;
+            font-family: "微软雅黑"
+        }
+
+        .cnum {
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+<body>
+<div class='head'></div>
+<div class="title">
+    <div class='title_date'>数据跟新时间：<font id='loadTime' color='blue'>2016-10-27 20:09:00</font> &nbsp;&nbsp;[<a
+            href="http://rr.mychebao.com/realreport/customer/ocsa.html">请刷新</a>]
+    </div>
+    <div class='title_info'>数据说明：括号内数据代表前一天当前时间的环比，<font color='red'>红色</font>代表上升，<font color='blue'>蓝色</font>代表下降
+    </div>
+</div>
+<hr/>
+<div class="bd">
+    <table id="datag"></table>
+</div>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-ext.js?v=20171122"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/common.js?v=201407241000"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/console.js?v=201501302101"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/LAB.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.patch.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/easyui-ext.js?v=201407241000"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/plugins/jquery.form.js"></script>
+<script type="text/javascript" src="../js/xcConfirm.js"></script>
+<script type="text/javascript" src="../js/jquery.cookie.min.js"></script>
+
+<script type="text/javascript">
+
+    var userId = $.cookie('LOGIN_USER_ID');
+    var basePath = '/cbr/';
+    document.domain = "mychebao.com";
+
+
+    $(function () {
+        if(!userId){
+            window.wxc.xcConfirm("请先登陆！！", window.wxc.xcConfirm.typeEnum.error);
+            return
+        }
+        $("#datag").treegrid({
+            idField: 'id',
+            treeField: 'item',
+            fit: true,
+            border: false,
+            striped: true,
+            animate: true,
+            nowrap: true,
+            loadMsg: '大侠莫慌，正在玩命加载中。。。',
+            columns: [[
+                {
+                    title: '项目', field: 'item', width: 130, formatter: function (value, row, index) {
+                        var size = 18 - (row.type * 2);
+                        if ("null" == value || null == value) {
+                            return "<font class='headText' style='font-size: " + size + "px;'>未分配客服</font>";
+                        } else {
+                            return "<font class='headText' style='font-size: " + size + "px;'>" + value + "</font>";
+                        }
+                    }
+                },
+                {
+                    title: '人均通时', field: 'calldurtotal', width: 80, formatter: function (value, row, index) {
+                        row._calldurtotal = (null == row._calldurtotal) ? 0 : row._calldurtotal;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._calldurtotal) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._calldurtotal + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._calldurtotal + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '人均有效通次（呼入+呼出）',
+                    field: 'outcallrealtotal',
+                    width: 100,
+                    formatter: function (value, row, index) {
+                        row._outcallrealtotal = (null == row._outcallrealtotal) ? 0 : row._outcallrealtotal;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._outcallrealtotal) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._outcallrealtotal + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._outcallrealtotal + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '单次人均通时',
+                    field: 'effective_per_capita',
+                    width: 100,
+                    formatter: function (value, row, index) {
+                        row._effective_per_capita = (null == row._effective_per_capita) ? 0 : row._effective_per_capita;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._effective_per_capita) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._effective_per_capita + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._effective_per_capita + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '人均外呼总数（外呼）', field: 'outcalltotal', width: 80, formatter: function (value, row, index) {
+                        row._outcalltotal = (null == row._outcalltotal) ? 0 : row._outcalltotal;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._outcalltotal) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._outcalltotal + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._outcalltotal + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '接通率（外呼）',
+                    field: 'outcall_accounted',
+                    width: 100,
+                    formatter: function (value, row, index) {
+                        row._outcall_accounted = (null == row._outcall_accounted) ? 0 : row._outcall_accounted;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._outcall_accounted) {
+                            return "<font class='cnum' color='blue'>" + value + "%</font>(<font class='pnum'>" + row._outcall_accounted + "%</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "%</font>(<font class='pnum'>" + row._outcall_accounted + "%</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '一分钟内通话次数占比',
+                    field: 'oneconnecttotal',
+                    width: 130,
+                    formatter: function (value, row, index) {
+                        row._oneconnecttotal = (null == row._oneconnecttotal) ? 0 : row._oneconnecttotal;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._oneconnecttotal) {
+                            return "<font class='cnum' color='blue'>" + value + "%</font>(<font class='pnum'>" + row._oneconnecttotal + "%</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "%</font>(<font class='pnum'>" + row._oneconnecttotal + "%</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '三分钟内通话次数占比',
+                    field: 'threeconnecttotal',
+                    width: 130,
+                    formatter: function (value, row, index) {
+                        row._threeconnecttotal = (null == row._threeconnecttotal) ? 0 : row._threeconnecttotal;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._threeconnecttotal) {
+                            return "<font class='cnum' color='blue'>" + value + "%</font>(<font class='pnum'>" + row._threeconnecttotal + "%</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "%</font>(<font class='pnum'>" + row._threeconnecttotal + "%</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '检测未破蛋', field: 'detectflag', width: 80, formatter: function (value, row, index) {
+                        row._detectflag = (null == row._detectflag) ? 0 : row._detectflag;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._detectflag) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._detectflag + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._detectflag + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '成交破蛋', field: 'transflag', width: 100, formatter: function (value, row, index) {
+                        row._transflag = (null == row._transflag) ? 0 : row._transflag;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._transflag) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._transflag + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._transflag + "</font>)";
+                        }
+                    }
+                }
+            ]], onBeforeExpand: function (row, param) {
+                // 展开数据操作
+                $(this).treegrid('options').url = basePath + 'customer/loadOCSAData_new?type=' + row.type + "&time=" + row.time;
+
+            }
+        });
+        //初始化刷新
+        reflash();
+    });
+
+    /**
+     * 刷新列表
+     */
+    function reflash() {
+        $("#datag").treegrid("loadData", []);
+        $.ajax({
+            type: "GET",
+            url: basePath + "customer/loadOCSAData_new?type=0",
+            dataType: "json",
+            success: function (data) {
+                // 规避easyUI连续加载后loadData失败问题;
+                try {
+                    $("#datag").treegrid("loadData", data.rows);
+                    $("#loadTime").html(data.loadDateTime);
+                } catch (e) {
+                    // 重新加载本页面;
+                    console.log("error message : %o", e);
+                    window.wxc.xcConfirm(e.toString(), window.wxc.xcConfirm.typeEnum.error);
+                }
+            }
+        });
+    }
+
+
+</script>
+</body>
+</html>

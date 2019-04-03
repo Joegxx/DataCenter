@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+
+</body>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-ext.js?v=20171122"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/common.js?v=201407241000"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/console.js?v=201501302101"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/LAB.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.patch.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/easyui-ext.js?v=201407241000"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/plugins/jquery.form.js"></script>
+<script src="https://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<div style="float: left;width: 20%">
+    登陆ID<input type="text" name="" value="" id="loginId"><br>
+    模拟ID<input type="text" name="" value="" id="simulatorId"><br>
+    <button type="button" name="button" id="ok">确定</button>
+    <br>
+
+    <a class="href" href="/realreport/customer/index_offline.html" target="cbr">线下运营指标</a><br>
+    <a class="href" href="/realreport/customer/online.html" target="cbr">线上运营指标</a><br>
+    <a class="href" href="/realreport/customer/ocsa.html" target="cbr">OCSA</a><br>
+    <a class="href" href="/realreport/market/index.html" target="cbr">市场报表</a><br>
+    <a class="href" href="/realreport/market/region.html" target="cbr">市场报表(城市)</a><br>
+    <a class="href" href="/realreport/market/channel.html" target="cbr">市场报表(渠道)</a><br>
+    <a class="href" href="/bigdata/cbr/boss/new_online_operation_index" target="cbr">线上运营指标(新)</a><br>
+</div>
+<div style="float: left;width: 78%">
+    <iframe style="width: 100%;height: 900px" name="cbr">
+
+    </iframe>
+</div>
+<script type="text/javascript">
+    document.domain = "mychebao.com";
+    $(function () {
+        let $href = $(".href");
+        console.log($href[0])
+        for (var i = 0 ;i<$href.length;i++){
+            var item = $href[i];
+            item.href +="?"+new Date().getTime();
+        }
+        $('#ok').on("click", function () {
+            if ($("#loginId").val()) {
+                $.cookie("LOGIN_USER_ID", $("#loginId").val(), {path: '/'});
+            }
+            if ($("#simulatorId").val()) {
+                $.cookie("SIMULATOR_ID", $("#simulatorId").val(), {path: '/'});
+            }
+
+            alert("设置成功！！")
+        });
+    })
+</script>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>市场报表</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="http://statics.mychebao.com/portalv1/css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="http://statics.mychebao.com/portalv1/css/pub.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/themes/icon.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-themes/default/easyui.css"
+          id="themeCssLink"/>
+
+    <style type="text/css">
+        body {
+            padding: 0 0 0 20px
+        }
+
+        .head {
+            height: 20px;
+            width: 100%
+        }
+
+        .bd {
+            width: 100%;
+            height: calc(100% - 90px);
+        }
+
+        .title_date, .title_info {
+            font-family: 微软雅黑
+        }
+
+        .title_date > font, .title_info > font {
+            font-weight: bolder
+        }
+
+        .pnum {
+            text-decoration: underline
+        }
+
+        .headText {
+            font-weight: bolder;
+            font-family: "微软雅黑"
+        }
+
+        .cnum {
+            font-weight: bold;
+        }
+
+        .title {
+            height: 50px;
+        }
+
+        .source {
+            position: relative;
+            left: 400px;
+            bottom: 40px;
+            width: 300px;
+        }
+    </style>
+
+</head>
+<body>
+<div class='head'></div>
+<div class="title">
+    <div class='title_date'>数据更新时间：<font id='loadTime' color='blue'>2016-10-27 20:09:00</font> &nbsp;&nbsp;
+        [<a href="http://rr.mychebao.com/realreport/market/index.html">请刷新</a>]
+    </div>
+    <div class='title_info'>数据说明：<font color='red'>红色</font>代表上升，<font color='blue'>蓝色</font>代表下降</div>
+    <div class="source">
+        渠道筛选: &nbsp;
+        <input class="easyui-combobox" name="auctionType" id="sourceId" panelHeight="auto" style="width: 200px;"/>
+        <span class="l-btn-icon icon-remove" style="cursor:pointer;" onclick="defaultClear('sourceId');">&nbsp;</span>
+    </div>
+</div>
+<hr/>
+<div class="bd">
+    <table id="datag"></table>
+</div>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-ext.js?v=20171122"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/common.js?v=201407241000"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/console.js?v=201501302101"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/LAB.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.patch.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/easyui-ext.js?v=201407241000"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/plugins/jquery.form.js"></script>
+<script src="../js/jquery.cookie.min.js"></script>
+<script type="text/javascript">
+
+    document.domain = "mychebao.com";
+    var basePath = '/cbr/';
+
+    $(function () {
+        var idList = [];
+
+        $.ajax({
+            type: "POST",
+            url: basePath + "market/loadChannelData",
+            dataType: "json",
+            success: function (data) {
+                $('#sourceId').combotree({
+                    data: data,
+                    onBeforeSelect: function (node) {
+                        if (!$(this).tree('isLeaf', node.target)) {
+                            return false;
+                        }
+                    },
+                    onClick: function (node) {
+                        if (!$(this).tree('isLeaf', node.target)) {
+                            $('#sourceId').combo('showPanel');
+                        }
+                    },
+                    onSelect: function (node) {
+                        idList = [];//清空
+                        idList.push(node.id);
+                        var parentNode = $(this).tree('getParent', node.target);
+                        if (parentNode) {
+                            idList.push(parentNode.id);
+                            var topNode = $(this).tree('getParent', parentNode.target);
+                            if (topNode) {
+                                idList.push(topNode.id);
+                            }
+                        }
+
+                    }
+                });
+            }
+        });
+        $("#datag").treegrid({
+            idField: 'id',
+            treeField: 'item',
+            fit: true,
+            border: false,
+            striped: true,
+            animate: true,
+            nowrap: true,
+            loadMsg: '大侠莫慌，正在玩命加载中。。。',
+            columns: [
+                [
+                    {
+                        title: '项目',
+                        field: 'item',
+                        width: 280,
+                        rowspan: 2,
+                        halign: 'center',
+                        formatter: function (value, row, index) {
+                            var size = 18 - (row.type * 2);
+                            return "<font class='headText' style='font-size: " + size + "px;'>" + value + "</font>";
+                        }
+                    },
+                    {
+                        title: '总信息量',
+                        colspan: 4
+                    },
+                    {
+                        title: '有效信息量',
+                        colspan: 4
+                    },
+                    {
+                        title: '预约检测量',
+                        colspan: 4
+                    },
+                ], [
+                    {
+                        title: '今日值',
+                        field: 'totalCount',
+                        width: 70,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            row._totalCount = (null == row._totalCount) ? 0 : row._totalCount;
+                            value = (null == value) ? 0 : value;
+                            if (value < row._totalCount) {
+                                return "<font class='cnum' color='blue'>" + value + "</font>";
+                            } else if (value > row._totalCount) {
+                                return "<font class='cnum' color='red'>" + value + "</font>";
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        title: '环比',
+                        width: 70,
+                        align: 'center',
+                        field: '_totalCount'
+                    },
+                    {
+                        title: '上周同比',
+                        width: 70,
+                        align: 'center',
+                        field: 'weekTotalCount',
+                        formatter: function (value, row, index) {
+                            if (value == null) {
+                                return '-';
+                            }
+                            return value;
+                        }
+
+                    },
+                    {
+                        title: '上月同比',
+                        width: 70,
+                        align: 'center',
+                        field: 'monthTotalCount',
+                        formatter: function (value, row, index) {
+                            if (value == null) {
+                                return '-';
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        title: '今日值',
+                        width: 70,
+                        align: 'center',
+                        field: 'vaildCount',
+                        formatter: function (value, row, index) {
+                            row._vaildCount = (null == row._vaildCount) ? 0 : row._vaildCount;
+                            value = (null == value) ? 0 : value;
+                            if (value < row._vaildCount) {
+                                return "<font class='cnum' color='blue'>" + value + "</font>";
+                            } else if (value > row._vaildCount) {
+                                return "<font class='cnum' color='red'>" + value + "</font>";
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        title: '环比',
+                        width: 70,
+                        align: 'center',
+                        field: '_vaildCount',
+                    },
+                    {
+                        title: '上周同比',
+                        width: 70,
+                        align: 'center',
+                        field: 'weekVaildCount',
+                        formatter: function (value, row, index) {
+                            if (value == null) {
+                                return '-';
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        title: '上月同比',
+                        width: 70,
+                        align: 'center',
+                        field: 'monthVaildCount',
+                        formatter: function (value, row, index) {
+                            if (value == null) {
+                                return '-';
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        title: '今日值',
+                        width: 70,
+                        align: 'center',
+                        field: 'appointDetectionCount',
+                        formatter: function (value, row, index) {
+                            row._appointDetectionCount = (null == row._appointDetectionCount) ? 0 : row._appointDetectionCount;
+                            value = (null == value) ? 0 : value;
+                            if (value < row._appointDetectionCount) {
+                                return "<font class='cnum' color='blue'>" + value + "</font>";
+                            } else if (value > row._appointDetectionCount) {
+                                return "<font class='cnum' color='red'>" + value + "</font>";
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        title: '环比',
+                        width: 70,
+                        align: 'center',
+                        field: '_appointDetectionCount',
+                    },
+                    {
+                        title: '上周同比',
+                        width: 70,
+                        align: 'center',
+                        field: 'weekAppointDetectionCount',
+                        formatter: function (value, row, index) {
+                            if (value == null) {
+                                return '-';
+                            }
+                            return value;
+                        }
+                    },
+                    {
+                        title: '上月同比',
+                        width: 70,
+                        align: 'center',
+                        field: 'monthAppointDetectionCount',
+                        formatter: function (value, row, index) {
+                            if (value == null) {
+                                return '-';
+                            }
+                            return value;
+                        }
+                    }
+                ]
+            ],
+            onBeforeExpand: function (row, param) {
+                // 展开数据操作
+                var channelId = $('#sourceId').combotree('getValue');
+                var channelParam = '';
+                if (channelId) {
+                    channelParam = '&childChannel=' + idList[0] + '&channel=' + idList[1];
+                    if (idList.length == 3) {
+                        channelParam += '&parentChannel=' + idList[2];
+                    }
+                }
+                $(this).treegrid('options').url = basePath + 'market/loadData?type=' + row.type + "&time=" + row.time + channelParam;
+
+            }
+        });
+        //初始化刷新
+        reflash();
+    });
+
+    /**
+     * 刷新列表
+     */
+    function reflash() {
+        $("#datag").treegrid("loadData", []);
+        $.ajax({
+            type: "GET",
+            url: basePath + "market/loadData?type=0",
+            dataType: "json",
+            success: function (data) {
+                // 规避easyUI连续加载后loadData失败问题;
+                try {
+                    $("#datag").treegrid("loadData", data.rows);
+                    $("#loadTime").html(data.loadDateTime);
+                } catch (e) {
+                    // 重新加载本页面;
+                    console.log("error message : %o", e);
+                    location.reload();
+                }
+            }
+        });
+    }
+
+    function defaultClear(id) {
+        $('#' + id).combobox('setValue', '');
+    }
+
+
+</script>
+</body>
+</html>

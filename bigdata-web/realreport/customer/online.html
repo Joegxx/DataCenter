@@ -1,0 +1,465 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>线上运营指标（新）</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="http://statics.mychebao.com/portalv1/css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="http://statics.mychebao.com/portalv1/css/pub.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/themes/icon.css"/>
+    <link rel="stylesheet" type="text/css"
+          href="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-themes/default/easyui.css"
+          id="themeCssLink"/>
+    <link rel="stylesheet" type="text/css" href="../css/xcConfirm.css" id="xcConfirm"/>
+    <style type="text/css">
+        body {
+            padding: 0 0 0 20px
+        }
+
+        .head {
+            height: 20px;
+            width: 100%
+        }
+
+        .bd {
+            width: 1130px;
+            height: 550px;
+            margin-top: 10px;
+        }
+
+        .title_date, .title_info {
+            font-family: 微软雅黑
+        }
+
+        .title_date > font, .title_info > font {
+            font-weight: bolder
+        }
+
+        .pnum {
+            text-decoration: underline
+        }
+
+        .headText {
+            font-weight: bolder;
+            font-family: "微软雅黑"
+        }
+
+        .cnum {
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+<body>
+<div class='head'></div>
+<div class="title">
+    <div class='title_date'>数据跟新时间：<font id='loadTime' color='blue'>正在加载......</font> &nbsp;&nbsp;[<a
+            id="refresh" href="#">请刷新</a>]
+    </div>
+    <div class='title_info'>数据说明：括号内数据代表前一天当前时间的环比，<font color='red'>红色</font>代表上升，<font color='blue'>蓝色</font>代表下降
+    </div>
+</div>
+<hr/>
+<div class="bd">
+    <table id="datag"></table>
+</div>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-1.8.0.min.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/jquery-ext.js?v=20171122"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/common.js?v=201407241000"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/console.js?v=201501302101"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/LAB.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.min.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/jquery.easyui.patch.js"></script>
+<script type="text/javascript" src="http://statics.mychebao.com/portalv1/js/easyui-ext.js?v=201407241000"></script>
+<script type="text/javascript"
+        src="http://statics.mychebao.com/portalv1/plugins/jquery-easyui-1.3.6/plugins/jquery.form.js"></script>
+<script type="text/javascript" src="../js/xcConfirm.js"></script>
+<script type="text/javascript" src="../js/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="../config.js"></script>
+<script type="text/javascript">
+    var userId = $.cookie('LOGIN_USER_ID');
+    var basePath = '/cbr/';
+    document.domain = "mychebao.com";
+    // 初始化函数
+    $(function () {
+        setTimeout("init()" , 500);
+        //循环执行，每隔1秒钟执行一次 1000
+        refreshSession();
+    });
+    init = function () {
+        $('#refresh').attr('href','http://rr.mychebao.com/realreport/customer/online.html?uuid='+new Date().getTime()+'');
+        if(!userId){
+            window.wxc.xcConfirm("请先登陆！！", window.wxc.xcConfirm.typeEnum.error);
+            return
+        }
+        $("#datag").treegrid({
+            idField: 'id',
+            treeField: 'item',
+            fit: true,
+            border: false,
+            striped: true,
+            animate: true,
+            nowrap: true,
+            loadMsg: '大侠莫慌，正在玩命加载中。。。',
+            columns: [[
+                {
+                    title: '项目', field: 'item', width: 200,frozen: true, formatter: function (value, row, index) {
+                        var size = 18 - (row.type * 2);
+                        if ("null" == value || null == value) {
+                            return "<font class='headText' style='font-size: " + size + "px;'>未分配客服</font>";
+                        } else {
+                            return "<font class='headText' style='font-size: " + size + "px;'>" + value + "</font>";
+                        }
+                    }
+                },
+                {
+                    title: '总信息量', field: 'totalCount', width: 110, formatter: function (value, row, index) {
+                        row._totalCount = (null == row._totalCount) ? 0 : row._totalCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._totalCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._totalCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._totalCount + "</font>)";
+                        }
+                    }
+                },
+                // {
+                //     title: '有效信息量', field: 'vaildCount', width: 110, formatter: function (value, row, index) {
+                //         row._vaildCount = (null == row._vaildCount) ? 0 : row._vaildCount;
+                //         value = (null == value) ? 0 : value;
+                //         if (value < row._vaildCount) {
+                //             return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._vaildCount + "</font>)";
+                //         } else {
+                //             return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._vaildCount + "</font>)";
+                //         }
+                //     }
+                // },
+                {
+                    title: '数据跟踪量', field: 'dataTackingCount', width: 110, formatter: function (value, row, index) {
+                        row._dataTackingCount = (null == row._dataTackingCount) ? 0 : row._dataTackingCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._dataTackingCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._dataTackingCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._dataTackingCount + "</font>)";
+                        }
+                    }
+                }, // TODO 隐藏数据
+                {
+                    title: '新数据分配量',
+                    field: 'newdatacount',
+                    width: 120,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._newdatacount = (null == row._newdatacount) ? 0 : row._newdatacount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._newdatacount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._newdatacount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._newdatacount + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '预约检测量',
+                    field: 'appointDetectionCount',
+                    width: 70,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._appointDetectionCount = (null == row._appointDetectionCount) ? 0 : row._appointDetectionCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._appointDetectionCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._appointDetectionCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._appointDetectionCount + "</font>)";
+                        }
+                    }
+                },
+                // {
+                //     title: '预约成交量(已签)',
+                //     field: 'newtransactionCount',
+                //     width: 110,
+                //     hidden: false,
+                //     formatter: function (value, row, index) {
+                //         row._newtransactionCount = (null == row._newtransactionCount || undefined == row._newtransactionCount) ? 0 : row._newtransactionCount;
+                //         value = (null == value) ? 0 : value;
+                //         if (value < row._newtransactionCount) {
+                //             return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._newtransactionCount + "</font>)";
+                //         } else {
+                //             return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._newtransactionCount + "</font>)";
+                //         }
+                //     }
+                // },
+                {
+                    title: '速卖场预约成交量',
+                    field: 'smc_transactionCount',
+                    width: 70,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._smc_transactionCount = (null == row._smc_transactionCount) ? 0 : row._smc_transactionCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._smc_transactionCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._smc_transactionCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._smc_transactionCount + "</font>)";
+                        }
+                    }
+                },
+                /*{title:'预约成交服务收入',field:'serviceCharge',width:110, hidden :true, formatter:function(value,row,index){
+                    row._serviceCharge = (null == row._serviceCharge) ? 0 : row._serviceCharge;
+                    value = (null == value) ? 0 : value;
+                    if(value < row._serviceCharge){
+                        return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._serviceCharge + "</font>)";
+                    }else{
+                        return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._serviceCharge + "</font>)";
+                    }
+                }}*/
+                // {
+                //     title: '预收总收入（不含搓车、活动车）',
+                //     field: 'noserviceCharge',
+                //     width: 120,
+                //     hidden: false,
+                //     formatter: function (value, row, index) {
+                //         row._noserviceCharge = (null == row._noserviceCharge) ? 0 : row._noserviceCharge;
+                //         value = (null == value) ? 0 : value;
+                //         if (value < row._noserviceCharge) {
+                //             return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._noserviceCharge + "</font>)";
+                //         } else {
+                //             return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._noserviceCharge + "</font>)";
+                //         }
+                //     }
+                // },
+                // {
+                //     title: '车均预收收入（不含搓车、活动车） ',
+                //     field: 'noserviceChargeAve',
+                //     width: 250,
+                //     hidden: false,
+                //     formatter: function (value, row, index) {
+                //         row._noserviceChargeAve = (null == row._noserviceChargeAve) ? 0 : row._noserviceChargeAve.replace(",", "")*1;
+                //         value = (null == value) ? 0 : value.replace(",", "")*1;
+                //         if (value < row._noserviceChargeAve) {
+                //             return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._noserviceChargeAve + "</font>)";
+                //         } else {
+                //             return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._noserviceChargeAve + "</font>)";
+                //         }
+                //     }
+                // },
+                // {
+                //     title: '车均预约成交服务费收入',
+                //     field: 'serviceChargeAve',
+                //     width: 150,
+                //     hidden: false,
+                //     formatter: function (value, row, index) {
+                //         row._serviceChargeAve = (null == row._serviceChargeAve) ? 0 : row._serviceChargeAve.replace(",", "");
+                //         value = (null == value) ? 0 : value.replace(",", "");
+                //         if (value < row._serviceChargeAve) {
+                //             return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._serviceChargeAve + "</font>)";
+                //         } else {
+                //             return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._serviceChargeAve + "</font>)";
+                //         }
+                //     }
+                // },
+                // {
+                //     title: '预约成量（不含搓车、活动车）',
+                //     field: 'notransactionCount',
+                //     width: 110,
+                //     hidden: false,
+                //     formatter: function (value, row, index) {
+                //         row._notransactionCount = (null == row._notransactionCount) ? 0 : row._notransactionCount;
+                //         value = (null == value) ? 0 : value;
+                //         if (value < row._notransactionCount) {
+                //             return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._notransactionCount + "</font>)";
+                //         } else {
+                //             return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._notransactionCount + "</font>)";
+                //         }
+                //     }
+                // },
+                {
+                    title: '速卖场预约成交服务费总收入',
+                    field: 'smc_serviceCharge',
+                    width: 120,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._smc_serviceCharge = (null == row._smc_serviceCharge) ? 0 : row._smc_serviceCharge;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._smc_serviceCharge) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._smc_serviceCharge + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._smc_serviceCharge + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '速卖场车均收入',
+                    field: 'smc_serviceChargeAve',
+                    width: 120,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._smc_serviceChargeAve = (null == row._smc_serviceChargeAve) ? 0 : row._smc_serviceChargeAve;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._smc_serviceChargeAve) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._smc_serviceChargeAve + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._smc_serviceChargeAve + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '寄卖场数据跟踪量', field: 'jmc_dataTackingCount', width: 110, formatter: function (value, row, index) {
+                        row._jmc_dataTackingCount = (null == row._jmc_dataTackingCount) ? 0 : row._jmc_dataTackingCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._jmc_dataTackingCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._jmc_dataTackingCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._jmc_dataTackingCount + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '寄卖场预约成交量',
+                    field: 'jmc_transactionCount',
+                    width: 70,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._jmc_transactionCount = (null == row._jmc_transactionCount) ? 0 : row._jmc_transactionCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._jmc_transactionCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._jmc_transactionCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._jmc_transactionCount + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '寄卖场预收收入',
+                    field: 'jmc_serviceCharge',
+                    width: 120,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._jmc_serviceCharge = (null == row._jmc_serviceCharge) ? 0 : row._jmc_serviceCharge;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._jmc_serviceCharge) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._jmc_serviceCharge + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._jmc_serviceCharge + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '搓车发起量',
+                    field: 'cuocheStartCount',
+                    width: 120,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._cuocheStartCount = (null == row._cuocheStartCount) ? 0 : row._cuocheStartCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._cuocheStartCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._cuocheStartCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._cuocheStartCount + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '搓车成交量',
+                    field: 'cuocheTransactionCount',
+                    width: 120,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._cuocheTransactionCount = (null == row._cuocheTransactionCount) ? 0 : row._cuocheTransactionCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._cuocheTransactionCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._cuocheTransactionCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._cuocheTransactionCount + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '预约成交量',
+                    field: 'transactionCount',
+                    width: 70,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._transactionCount = (null == row._transactionCount) ? 0 : row._transactionCount;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._transactionCount) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._transactionCount + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._transactionCount + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '预约成交服务费总收入',
+                    field: 'serviceCharge',
+                    width: 120,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._serviceCharge = (null == row._serviceCharge) ? 0 : row._serviceCharge;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._serviceCharge) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._serviceCharge + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._serviceCharge + "</font>)";
+                        }
+                    }
+                },
+                {
+                    title: '车均预收收入 ',
+                    field: 'serviceChargeAve',
+                    width: 100,
+                    hidden: false,
+                    formatter: function (value, row, index) {
+                        row._serviceChargeAve = (null == row._serviceChargeAve) ? 0 : row._serviceChargeAve;
+                        value = (null == value) ? 0 : value;
+                        if (value < row._serviceChargeAve) {
+                            return "<font class='cnum' color='blue'>" + value + "</font>(<font class='pnum'>" + row._serviceChargeAve + "</font>)";
+                        } else {
+                            return "<font class='cnum' color='red'>" + value + "</font>(<font class='pnum'>" + row._serviceChargeAve + "</font>)";
+                        }
+                    }
+                },
+
+            ]],
+            onBeforeExpand: function (row, param) {
+                // 展开数据操作
+                $(this).treegrid('options').url = basePath + 'customer/online?type=' + row.type + "&time=" + row.time;
+
+            }
+        });
+
+        //初始化刷新
+        reflash()
+    };
+
+    /**
+     * 刷新列表
+     */
+    function reflash() {
+        console.log('hello world');
+        $("#datag").treegrid("loadData", []);
+        $.ajax({
+            type: "GET",
+            url: basePath + "customer/online?type=0",
+            dataType: "json",
+            success: function (data) {
+                // 规避easyUI连续加载后loadData失败问题;
+                try {
+                    $("#datag").treegrid("loadData", data.rows);
+                    $("#loadTime").html(data.loadDateTime);
+                } catch (e) {
+                    // 重新加载本页面;
+                    console.log("error message : %o", e);
+                    window.wxc.xcConfirm(e.toString(), window.wxc.xcConfirm.typeEnum.error);
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
