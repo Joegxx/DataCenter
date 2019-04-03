@@ -42,7 +42,7 @@
 ##### 2、安装部署nacos
 
     1). 下载地址：https://github.com/alibaba/nacos/releases  
-    2). 解压 nacos-server-1.0.0-RC1.tar.gz
+    2). 解压 nacos-server-0.6.0-RC1.tar.gz
         目录结构：   
         |---nacos  
         |------|---bin  
@@ -60,11 +60,17 @@
         db.password=123
     
     注意：将数据库连接改一下
-    5). 启动nacos
+		
+		修改nacos/conf/cluster.conf
+		
+		192.168.1.3
+		192.168.1.205
+		192.168.1.233
+	注意: 将须部署的机器IP对应改一下
+    5). 启动nacos(每台部署的机器都做相同操作即可)
     进入nacos/bin目录，执行startup.sh 或startup.cmd
     6). 打开web页面
         地址： 127.0.0.1:8848/nacos   
-        用户名：nacos  密码： nacos
         
 ##### 3、安装部署sentinel
 >主要是安装一个控制台，实时接受服务传来的运行参数，以及实时更改或配置一些限流策略
@@ -117,12 +123,56 @@
     用户名：admin
     默认密码：admin
     
-#### 二、部署bigdata-parent
-因为此项目是其他项目的依赖，所以需要最先部署
-```bash
-cd path/to/bigdata-parent
-mvn clean install
+#### 二、nacos配置
+	1)、nacos配置命名空间
+	命名空间-新建命名空间-新建名为"sentinel"的命名空间
+	2)、配置列表-public
+	创建 
+	public.yml	全局通用静态配置
+	application.yml	应用独用静态配置
+	logback.xml	应用独用日志配置
+	dynamic.yml	应用独用动态配置
+	详细例子参考http://122.112.232.117:8848/nacos/#/configurationManagement?dataId=&group=&appName=&namespace=&namespaceShowName=Public
+	3)、配置列表-sentinel
+	degrade_rule.json sentinel降级
+	flow_rule.json	sentinel流控
+	详细例子参考http://122.112.232.117:8848/nacos/#/configurationManagement?dataId=&group=&appName=&namespace=05e6ca72-3738-4f87-8c28-11a212d07496&namespaceShowName=sentinel
+
+#### 三、部署bigdata基础服务
 ```
-#### 三、部署数据服务中心项目
+	cd cachecloud/cachecloud-open-common
+	mvn clean install -DskipTests
+
+	cd cachecloud
+	mvn clean install -DskipTests(此步骤无须success，执行即可)
+
+	cd bigdata-interface
+	mvn clean install -DskipTests
+
+	cd bigdata-parent
+	mvn clean install -DskipTests
+
+	cd big-dbms（nacos配置如nacos配置中的样例）
+	mvn clean install -DskipTests
+```
+	获取big-dbms/dbms-portal/target/dbms-portal-*.*.*-SNAPSHOT.tar.gz
+	将tar包放到部署服务器目录(/opt/app/bigdata/dbms)上，解压
+	修改config/application.properties 配置正确的nacos地址
+	启动 bin/bigdata.sh start
+	
+#### 四、部署报表后端服务
+先在dbms-nacos-application.yml中配置的hiveMeta数据库中新建bigdata库
+创建bigdata.sql中的mysql表
+```
+	cd big-cbr（nacos配置如nacos配置中的样例）
+	mvn clean install -DskipTests
+```
+	获取big-cbr/cbr-portal/target/cbr-portal-*.*.*-SNAPSHOT.tar.gz
+	将tar包放到部署服务器目录(/opt/app/bigdata/cbr)上，解压
+	修改config/application.properties 配置正确的nacos地址
+	启动 bin/bigdata.sh start
+	
+#### 五、部署bigdata-web前端服务
+参考bigdata-web/README.md
 
 
